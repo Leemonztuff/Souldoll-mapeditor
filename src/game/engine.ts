@@ -132,6 +132,7 @@ export class GameEngine {
   private inventory: InventoryItem[] = [];
   private questState: 'none' | 'active' | 'completed' = 'none';
   private pixelEffectEnabled: boolean = true;
+  private isEditorOpen: boolean = false;
 
   private currentLookTarget: THREE.Vector3 = new THREE.Vector3();
   private cameraInitialized: boolean = false;
@@ -866,22 +867,24 @@ export class GameEngine {
     let moveForward = 0;
     let moveRight = 0;
 
-    if (this.inputManager.isActionActive('turnLeft')) {
-      this.player.state.rotation += 2.2 * dt;
-    }
-    if (this.inputManager.isActionActive('turnRight')) {
-      this.player.state.rotation -= 2.2 * dt;
-    }
+    if (!this.isEditorOpen) {
+      if (this.inputManager.isActionActive('turnLeft')) {
+        this.player.state.rotation += 2.2 * dt;
+      }
+      if (this.inputManager.isActionActive('turnRight')) {
+        this.player.state.rotation -= 2.2 * dt;
+      }
 
-    const yawDelta = this.inputManager.consumeYawDelta();
-    if (yawDelta !== 0) {
-      this.player.state.rotation += yawDelta;
+      const yawDelta = this.inputManager.consumeYawDelta();
+      if (yawDelta !== 0) {
+        this.player.state.rotation += yawDelta;
+      }
     }
 
     const analog = this.inputManager.getAnalogMove();
     const analogLen = Math.hypot(analog.x, analog.y);
 
-    if (!this.activeDialogue) {
+    if (!this.activeDialogue && !this.isEditorOpen) {
       if (analogLen > 0.01) {
         moveRight = analog.x;
         moveForward = analog.y;
@@ -1389,15 +1392,78 @@ export class GameEngine {
   }
 
   public triggerInteract() {
+    if (this.isEditorOpen) return;
     if (this.stateMachine.getState() === 'world') {
       this.handleInteraction();
     }
   }
 
   public triggerAttack() {
+    if (this.isEditorOpen) return;
     if (this.stateMachine.getState() === 'world' && !this.activeDialogue) {
       this.handleAttack();
     }
+  }
+
+  public isEditorActive(): boolean {
+    return this.isEditorOpen;
+  }
+
+  public setEditorActive(active: boolean): void {
+    this.isEditorOpen = active;
+  }
+
+  public getChunkManager(): ChunkManager | null {
+    return this.chunkManager ?? null;
+  }
+
+  public getScene(): THREE.Scene {
+    return this.scene;
+  }
+
+  public getCamera(): THREE.PerspectiveCamera {
+    return this.camera;
+  }
+
+  public getPlayerPosition(): { x: number; y: number; z: number } {
+    return {
+      x: this.player?.state.x ?? 0,
+      y: this.player?.state.y ?? 0,
+      z: this.player?.state.z ?? 0,
+    };
+  }
+
+  public getGroundIntersection(clientX: number, clientY: number): { x: number; y: number; z: number } | null {
+    const dom = this.renderer.domElement;
+    const rect = dom.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+    const ndcX = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const ndcY = -(((clientY - rect.top) / rect.height) * 2 - 1);
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), this.camera);
+
+    const meshes = this.chunkManager?.getTerrainMeshes() ?? [];
+    if (meshes.length > 0) {
+      const hits = raycaster.intersectObjects(meshes, false);
+      if (hits.length > 0) {
+        return {
+          x: hits[0].point.x,
+          y: hits[0].point.y,
+          z: hits[0].point.z,
+        };
+      }
+    }
+
+    const py = this.player?.state.y ?? 0;
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -py);
+    const target = new THREE.Vector3();
+    const hit = raycaster.ray.intersectPlane(plane, target);
+    if (hit) {
+      const y = getTerrainHeight(target.x, target.z);
+      return { x: target.x, y, z: target.z };
+    }
+    return null;
   }
 
   public toggleSprint(active?: boolean) {

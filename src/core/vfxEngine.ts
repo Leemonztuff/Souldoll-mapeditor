@@ -116,6 +116,8 @@ class VFXEngine {
 
       for (let i = this.particles.length - 1; i >= 0; i--) {
         const p = this.particles[i];
+        p.vx *= p.drag; // Apply drag
+        p.vy *= p.drag; // Apply drag
         p.x += p.vx * dt;
         p.y += p.vy * dt;
         p.life -= dt;
@@ -153,37 +155,30 @@ class VFXEngine {
   }
 
   public triggerSkillVFX(type: SoulType | VFXType, x: number, y: number) {
-    let color = '#38bdf8';
-    let vfxType: VFXType = 'explosion';
+    const config = {
+      Fuego: { color: '#ef4444', type: 'fire' as VFXType, count: 60, speed: 180, gravity: -80, drag: 0.92, size: 8 },
+      Agua: { color: '#38bdf8', type: 'water' as VFXType, count: 50, speed: 120, gravity: 40, drag: 0.95, size: 6 },
+      Planta: { color: '#4ade80', type: 'plant' as VFXType, count: 50, speed: 90, gravity: 0, drag: 0.9, size: 5 },
+      Rayo: { color: '#facc15', type: 'electric' as VFXType, count: 80, speed: 250, gravity: 0, drag: 0.85, size: 4 },
+      Sombra: { color: '#a855f7', type: 'shadow' as VFXType, count: 40, speed: 100, gravity: 20, drag: 0.94, size: 7 },
+      Luz: { color: '#fbbf24', type: 'light' as VFXType, count: 40, speed: 140, gravity: -20, drag: 0.93, size: 6 }
+    }[type as SoulType] || { color: '#ffffff', type: 'explosion' as VFXType, count: 30, speed: 100, gravity: 0, drag: 0.9, size: 5 };
 
-    switch (type) {
-      case 'Fuego': color = '#ef4444'; vfxType = 'fire'; break;
-      case 'Agua': color = '#38bdf8'; vfxType = 'water'; break;
-      case 'Planta': color = '#4ade80'; vfxType = 'plant'; break;
-      case 'Rayo': color = '#facc15'; vfxType = 'electric'; break;
-      case 'Sombra': color = '#a855f7'; vfxType = 'shadow'; break;
-      case 'Luz': color = '#fbbf24'; vfxType = 'light'; break;
-      case 'heal': color = '#34d399'; vfxType = 'heal'; break;
-      case 'capture': color = '#c084fc'; vfxType = 'capture'; break;
-      case 'levelup': color = '#fde047'; vfxType = 'levelup'; break;
-      default: color = '#ffffff'; vfxType = 'explosion'; break;
-    }
-
-    const particleCount = 28;
-    for (let i = 0; i < particleCount; i++) {
+    for (let i = 0; i < config.count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 40 + Math.random() * 120;
+      const speed = Math.random() * config.speed;
       const p = this.particlePool.get();
       Object.assign(p, {
         id: `p-${Math.random()}`,
         x, y,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 20,
-        size: 4 + Math.random() * 6,
-        color,
+        vy: Math.sin(angle) * speed + config.gravity,
+        size: config.size * (0.5 + Math.random()),
+        color: config.color,
         alpha: 1.0,
-        life: 0.4 + Math.random() * 0.4,
-        maxLife: 0.8,
+        life: 0.6 + Math.random() * 0.4,
+        maxLife: 1.0,
+        drag: config.drag // New property for physics simulation
       });
       this.particles.push(p);
     }
@@ -191,16 +186,16 @@ class VFXEngine {
     const v = this.vfxPool.get();
     Object.assign(v, {
       id: `vfx-${Math.random()}`,
-      type: vfxType,
-      x, y, color,
-      scale: 1.0,
-      life: 0.6,
-      maxLife: 0.6,
+      type: config.type,
+      x, y, color: config.color,
+      scale: 1.5,
+      life: 0.8,
+      maxLife: 0.8,
     });
     this.vfxList.push(v);
 
-    this.triggerScreenFlash(color, 0.2);
-    this.triggerScreenShake(0.35);
+    this.triggerScreenFlash(config.color, 0.15);
+    this.triggerScreenShake(0.25);
   }
 
   public showFloatingText(text: string, x: number, y: number, color: string = '#ffffff', fontSize: string = 'text-xl') {

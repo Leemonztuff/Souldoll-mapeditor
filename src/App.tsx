@@ -22,6 +22,7 @@ import { WorldMapModal } from './components/WorldMapModal';
 import { RegionBanner } from './components/RegionBanner';
 import { FAST_TRAVEL_POINTS, FastTravelPoint, WorldRegion, getRegionAt } from './data/regions';
 import { NPC_SHEETS } from './world/npcSprites';
+import { MapEditorModal } from './components/editor/MapEditorModal';
 
 function detectBiomeBackground(rival: BattleSoul): string {
   switch (rival.type) {
@@ -97,6 +98,8 @@ export default function App() {
 
   // Master Map State (Tecla M / Atlas de Luminati)
   const [showWorldMap, setShowWorldMap] = useState<boolean>(false);
+  // World Engine Map Editor State (Tecla F2 o ~)
+  const [showMapEditor, setShowMapEditor] = useState<boolean>(false);
   const [discoveredWaypoints, setDiscoveredWaypoints] = useState<string[]>(['fountain_villa']);
   const [unlockedFogCells, setUnlockedFogCells] = useState<number[]>(() => {
     const initCells: number[] = [];
@@ -482,10 +485,13 @@ export default function App() {
     };
   }, [handleHealTeam, hasWaterSoul, handleWaterQuestReward, handleItemReward, saveGameState]);
 
-  // Global keydown for Luminadex (Key J) and World Map (Key M)
+  // Global keydown for Luminadex (Key J), World Map (Key M), and Map Editor (Key F2 or Backquote)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (gameState === 'playing' && e.code === 'KeyJ') {
+      if (e.key === 'F2' || e.code === 'Backquote') {
+        e.preventDefault();
+        setShowMapEditor(prev => !prev);
+      } else if (gameState === 'playing' && e.code === 'KeyJ') {
         setShowLuminadex(prev => !prev);
       } else if (gameState === 'playing' && e.code === 'KeyM') {
         setShowWorldMap(prev => !prev);
@@ -887,10 +893,18 @@ export default function App() {
           onTogglePixelEffect={handleTogglePixelEffect}
           onSaveGame={() => saveGameState()}
           onReturnToTitle={handleReturnToTitle}
-          isAnyModalOpen={showWorldMap || showLuminadex || showSoulBag}
+          isAnyModalOpen={showWorldMap || showLuminadex || showSoulBag || showMapEditor}
           discoveredWaypoints={discoveredWaypoints}
+          onOpenMapEditor={() => setShowMapEditor(prev => !prev)}
         />
       )}
+
+      {/* World Engine — Map Editor Modal (Tecla F2 o ~) */}
+      <MapEditorModal
+        isOpen={showMapEditor}
+        onClose={() => setShowMapEditor(false)}
+        engine={engineRef.current}
+      />
 
       {/* World Map / Atlas de Luminati Modal (Tecla M) */}
       <WorldMapModal

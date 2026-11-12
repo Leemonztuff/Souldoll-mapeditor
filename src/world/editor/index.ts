@@ -15,3 +15,4 @@ export { createTerrainStampCommand, removeTerrainStampCommand } from './TerrainT
 export { createBiomeToggleCommand, createBiomePriorityCommand, createBiomePreset } from './BiomeTools';
 export { createScatterToggleCommand, createScatterDensityCommand, createScatterPreset } from './ScatterTools';
 export { createSplineToggleCommand, createSplinePointsCommand, createSplinePreset } from './SplineTools';
+export { createWorkZoneCommand, removeWorkZoneCommand } from './WorkZoneTools';

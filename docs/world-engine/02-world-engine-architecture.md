@@ -3,7 +3,7 @@
 **Proyecto:** `procedural-map-souldolls-rpgv1` (SoulDolls / Luminati)
 **Etapa:** Diseño arquitectónico. **No implementa sistemas.**
 **Base:** `docs/world-engine/01-current-engine-audit.md`
-**Estado:** aprobada. Contratos de `core/` y `terrain/` materializados en la etapa 03 (`03-terrain-stamps.md`).
+**Estado:** aprobada. Contratos de `core/` y `terrain/` materializados y validados en la etapa 03. Biomas validados en la etapa 04. Scatter y Splines validados en las etapas 05 y 06.
 
 ---
 
@@ -32,16 +32,16 @@ Evolucionar el motor procedural actual a un **World Engine modular** inspirado f
 
 | ID | Decisión | Estado |
 |---|---|---|
-| A01 | El motor vive en `src/world/` (subcarpetas `core/`, `terrain/`, `biomes/`, `scatter/`, `splines/`, `editor/`), no en `src/engine/world/` | Recomendada, pendiente de aprobación |
-| A02 | `worldGen.buildWorld` se conserva como fachada; delega progresivamente en `WorldManager` | Recomendada, pendiente |
-| A03 | `getTerrainHeight` conserva firma y se convierte en adaptador del `TerrainHeightService` activo | Recomendada, pendiente |
-| A04 | La base analítica actual (`getProceduralTerrainHeight`) se conserva como `AnalyticHeightSource`, no se reescribe | Recomendada, pendiente |
-| A05 | El mundo sigue siendo un mundo continuo con `WorldDefinition` por zona/mapa; no se convierte en mundo infinito | Recomendada, pendiente |
-| A06 | Los datos persistentes son JSON plano (sin `THREE.*`, sin funciones, sin clases) | Aprobable por diseño |
-| A07 | La generación se organiza en fases con caché e invalidación por capas y región | Recomendada, pendiente |
-| A08 | Determinismo mediante semillas derivadas por sistema/chunk/grupo/elemento (hash estable + PRNG explícito) | Recomendada, pendiente |
-| A09 | El editor es una herramienta de desarrollo embebida, desactivada por defecto, con undo/redo por comandos | Recomendada, pendiente |
-| A10 | Web Workers solo si el perfilado demuestra beneficio; sin dependencias nuevas | Recomendada, pendiente |
+| A01 | El motor vive en `src/world/` (subcarpetas `core/`, `terrain/`, `biomes/`, `scatter/`, `splines/`, `editor/`) | **Aprobada** |
+| A02 | `worldGen.buildWorld` se conserva como fachada; delega progresivamente en `WorldManager` | **Aprobada** |
+| A03 | `getTerrainHeight` conserva firma y se convierte en adaptador del `TerrainHeightService` activo | **Aprobada** |
+| A04 | La base analítica actual (`getProceduralTerrainHeight`) se conserva como `AnalyticHeightSource` | **Aprobada** |
+| A05 | El mundo sigue siendo un mundo continuo con `WorldDefinition` por zona/mapa | **Aprobada** |
+| A06 | Los datos persistentes son JSON plano (sin `THREE.*`, sin funciones, sin clases) | **Aprobada** |
+| A07 | La generación se organiza en fases con caché e invalidación por capas y región | **Aprobada** |
+| A08 | Determinismo mediante semillas derivadas por sistema/chunk/grupo/elemento | **Aprobada** |
+| A09 | El editor es una herramienta de desarrollo embebida, desactivada por defecto | **Aprobada** |
+| A10 | Web Workers solo si el perfilado demuestra beneficio; sin dependencias nuevas | **Aprobada** |
 
 ---
 

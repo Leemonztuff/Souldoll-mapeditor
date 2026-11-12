@@ -535,19 +535,19 @@ export function createHouseSideTexture(): THREE.CanvasTexture {
   return texture;
 }
 
-export function createHouseRoofTexture(theme: 'hero' | 'rival'): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 64;
-  canvas.height = 64;
-  const ctx = canvas.getContext('2d')!;
-  ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = theme === 'hero' ? '#b91c1c' : '#1e3a8a';
-  ctx.fillRect(0, 0, 64, 64);
-
-  const texture = new THREE.CanvasTexture(canvas);
+export function createHouseRoofTexture(theme: 'hero' | 'rival'): THREE.Texture {
+  const loader = new THREE.TextureLoader();
+  const texture = loader.load('/assets/tiles/roof_hd.jpg');
+  
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(2, 2);
+  
+  // 2x2 Atlas: each tile is 0.5 x 0.5
+  texture.repeat.set(0.5, 0.5);
+  
+  // Map themes to atlas quadrants (e.g., hero: 0,0, rival: 1,0)
+  texture.offset.set(theme === 'hero' ? 0 : 0.5, 0); 
+  
   texture.magFilter = THREE.NearestFilter;
   texture.minFilter = THREE.NearestFilter;
   texture.colorSpace = THREE.SRGBColorSpace;

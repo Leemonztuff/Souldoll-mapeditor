@@ -213,10 +213,29 @@ export class StampedTerrainSampler implements TerrainSampler {
     const tileZ = Math.floor(z / this.tileSize);
     const minX = tileX * this.tileSize;
     const minZ = tileZ * this.tileSize;
-    if (!this.tileIntersectsStamp(minX, minZ)) return base;
 
-    const tile = this.getTile(tileX, tileZ);
-    return base + this.sampleTile(tile, x, z);
+    // optimization: if tile has no stamps, return base immediately
+    if (!this.tileIntersectsStamp(minX, minZ)) {
+      return base;
+    }
+
+    const key = `${tileX},${tileZ}`;
+    let tile = this.tiles.get(key);
+
+    if (!tile) {
+      tile = this.buildTile(tileX, tileZ);
+      this.tiles.set(key, tile);
+      if (this.tiles.size > this.maxTiles) {
+        const oldest = this.tiles.keys().next().value;
+        if (oldest !== undefined) this.tiles.delete(oldest);
+      }
+    } else {
+      // LRU update
+      this.tiles.delete(key);
+      this.tiles.set(key, tile);
+    }
+
+    return base + tile.heightAt(x, z);
   }
 
   public baseHeightAt(x: number, z: number): number {
@@ -343,24 +362,6 @@ export class StampedTerrainSampler implements TerrainSampler {
     return false;
   }
 
-  private getTile(tileX: number, tileZ: number): TerrainHeightmap {
-    const key = `${tileX},${tileZ}`;
-    const cached = this.tiles.get(key);
-    if (cached) {
-      this.tiles.delete(key);
-      this.tiles.set(key, cached);
-      return cached;
-    }
-
-    const tile = this.buildTile(tileX, tileZ);
-    this.tiles.set(key, tile);
-    if (this.tiles.size > this.maxTiles) {
-      const oldest = this.tiles.keys().next().value;
-      if (oldest !== undefined) this.tiles.delete(oldest);
-    }
-    return tile;
-  }
-
   private buildTile(tileX: number, tileZ: number): TerrainHeightmap {
     const x0 = tileX * this.tileSize;
     const z0 = tileZ * this.tileSize;
@@ -383,10 +384,6 @@ export class StampedTerrainSampler implements TerrainSampler {
       cellSize: this.step,
       values: offsets,
     });
-  }
-
-  private sampleTile(tile: TerrainHeightmap, x: number, z: number): number {
-    return tile.heightAt(x, z);
   }
 
   private evaluateOffset(x: number, z: number): number {

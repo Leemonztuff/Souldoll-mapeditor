@@ -137,6 +137,16 @@ export class BiomePriorityResolver implements BiomeResolver {
     return this.weightsFromEnvironment(environment);
   }
 
+  public setMasks(masks: readonly BiomeMask[]): void {
+    this.masks.length = 0;
+    this.masks.push(...masks);
+    this.masks.sort(compareByIdThenPriority);
+  }
+
+  public getMasks(): readonly BiomeMask[] {
+    return this.masks;
+  }
+
   public sampleFromEnvironment(environment: BiomeEnvironment): ResolvedBiomeSample {
     this.evaluate(environment);
 

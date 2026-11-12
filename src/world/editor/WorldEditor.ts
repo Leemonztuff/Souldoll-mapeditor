@@ -7,7 +7,7 @@ import type { WorkZone } from '../core/WorkZone';
 import type { Vec2 } from '../core/WorldTypes';
 import type { TerrainStamp } from '../terrain/TerrainStamp';
 
-export type EditorTool = 'terrain' | 'biome' | 'scatter' | 'spline';
+export type EditorTool = 'terrain' | 'biome' | 'scatter' | 'spline' | 'workzone';
 export type EditorSplineType = 'road' | 'river' | 'lake';
 
 export interface WorldEditorPaletteItem {

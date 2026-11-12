@@ -54,6 +54,7 @@ interface GameHUDProps {
   onTogglePixelEffect?: () => void;
   isAnyModalOpen?: boolean;
   discoveredWaypoints?: string[];
+  onOpenMapEditor?: () => void;
 }
 
 export const GameHUD: React.FC<GameHUDProps> = ({
@@ -99,6 +100,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
   onTogglePixelEffect,
   isAnyModalOpen = false,
   discoveredWaypoints = [],
+  onOpenMapEditor,
 }) => {
   const [showControlsHint, setShowControlsHint] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
@@ -295,13 +297,18 @@ export const GameHUD: React.FC<GameHUDProps> = ({
         } else if (e.code === 'KeyJ' && onOpenLuminadex) {
           setShowMenuModal(false);
           onOpenLuminadex();
+        } else if ((e.key === 'F2' || e.code === 'Backquote') && onOpenMapEditor) {
+          setShowMenuModal(false);
+          onOpenMapEditor();
         }
         return;
       }
 
       if (isAnyModalOpen || activeDialogue) return;
 
-      if (e.code === 'KeyI') {
+      if (e.key === 'F2' || e.code === 'Backquote') {
+        onOpenMapEditor?.();
+      } else if (e.code === 'KeyI') {
         onOpenSoulBag?.('bag');
       } else if (e.code === 'KeyU') {
         onOpenSoulBag?.('team');
@@ -313,7 +320,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, activeDialogue, isAnyModalOpen, showMenuModal, onOpenLuminadex, onOpenWorldMap, onOpenSoulBag]);
+  }, [gameState, activeDialogue, isAnyModalOpen, showMenuModal, onOpenLuminadex, onOpenWorldMap, onOpenSoulBag, onOpenMapEditor]);
 
   // Typewriter effect with typewriter blip audio
   useEffect(() => {
@@ -411,91 +418,63 @@ export const GameHUD: React.FC<GameHUDProps> = ({
         </div>
       )}
 
-      {/* TOP STATUS BAR (BrandKit Grounded RPG Header) */}
+      {/* TOP STATUS BAR & COMPASS (Structured Hierarchy Container) */}
       {gameState === 'playing' && (
-        <div className="absolute top-0 inset-x-0 px-2 sm:px-3 md:px-4 pb-2 pt-safe flex items-start justify-between w-full z-20 pointer-events-none">
-          
-          {/* TOP-LEFT: Health, Gold, Soul Count */}
-          <div className="flex flex-col gap-1 sm:gap-2 pointer-events-auto">
-            <div className="flex items-center gap-1 sm:gap-2">
-              {/* Soul Count */}
+        <div className="absolute top-0 inset-x-0 p-2 sm:p-3 pt-safe flex flex-col items-center gap-1.5 z-30 pointer-events-none w-full">
+          {/* Row 1: Player Stats (Left) & Action Buttons (Right) */}
+          <div className="flex items-center justify-between w-full pointer-events-none max-w-5xl">
+            {/* TOP-LEFT: Health, Gold, Soul Count */}
+            <div className="flex items-center gap-1 sm:gap-2 pointer-events-auto">
               <BrandWidget
                 label="Almas"
                 value={`${soulsCollected}/${totalSouls}`}
                 icon="🔮"
                 accent="ki"
-                className="py-1 px-1.5 sm:px-2.5"
+                className="py-0.5 px-1 sm:px-2 text-[7.5px] sm:text-[8px]"
               />
-
-              {/* Gold Counter */}
               <BrandWidget
                 label="Oro"
                 value={gold}
                 icon="💰"
                 accent="gold"
-                className="py-1 px-1.5 sm:px-2.5"
+                className="py-0.5 px-1 sm:px-2 text-[7.5px] sm:text-[8px]"
               />
+              {/* Health Bar Widget */}
+              <BrandPanel variant="surface" className="px-1.5 py-1 w-22 sm:w-32 shadow-lg">
+                <div className="flex justify-between text-[6.5px] sm:text-[7px] font-bold text-[#F2E6C9] mb-0.5">
+                  <span className="text-[#C2234B]">❤️ HP</span>
+                  <span className="tabular-nums font-pixel">{hp}/{maxHp}</span>
+                </div>
+                <div className="w-full bg-[#090612] h-1.5 rounded-xs overflow-hidden border border-[#8A6A3B]/60 p-[1px]">
+                  <div
+                    className={`h-full transition-all duration-300 rounded-xs ${
+                      hp / maxHp > 0.5 
+                        ? 'bg-gradient-to-r from-emerald-600 to-[#5FE3D2]' 
+                        : hp / maxHp > 0.2 
+                        ? 'bg-gradient-to-r from-amber-600 to-[#E8B84A]' 
+                        : 'bg-gradient-to-r from-rose-800 to-[#C2234B]'
+                    }`}
+                    style={{ width: `${Math.max(0, Math.min(100, (hp / maxHp) * 100))}%` }}
+                  />
+                </div>
+              </BrandPanel>
             </div>
 
-            {/* Health Bar Widget */}
-            <BrandPanel variant="surface" className="px-2 py-1 sm:px-2.5 sm:py-1.5 w-34 sm:w-48 shadow-lg">
-              <div className="flex justify-between text-[7px] sm:text-[8px] font-bold text-[#F2E6C9] mb-1">
-                <span className="flex items-center gap-1 text-[#C2234B]">❤️ HP</span>
-                <span className="tabular-nums font-pixel">{hp}/{maxHp}</span>
-              </div>
-              <div className="w-full bg-[#090612] h-2 rounded-xs overflow-hidden border border-[#8A6A3B]/60 p-[1px]">
-                <div
-                  className={`h-full transition-all duration-300 rounded-xs ${
-                    hp / maxHp > 0.5 
-                      ? 'bg-gradient-to-r from-emerald-600 to-[#5FE3D2] shadow-[0_0_8px_rgba(95,227,210,0.5)]' 
-                      : hp / maxHp > 0.2 
-                      ? 'bg-gradient-to-r from-amber-600 to-[#E8B84A] shadow-[0_0_8px_rgba(232,184,74,0.5)]' 
-                      : 'bg-gradient-to-r from-rose-800 to-[#C2234B] shadow-[0_0_8px_rgba(194,35,75,0.5)]'
-                  }`}
-                  style={{ width: `${Math.max(0, Math.min(100, (hp / maxHp) * 100))}%` }}
-                />
-              </div>
-            </BrandPanel>
-          </div>
-
-          {/* TOP-RIGHT: Circular Minimap, Day/Night badge, Menu Hub */}
-          <div className="flex items-start gap-1.5 sm:gap-2 pointer-events-auto">
-            <div className="flex flex-col items-end gap-1">
-              {/* Circular Minimap (Removed) */}
-              {/* Compass (Replaces Minimap) */}
-              <div className="absolute top-2 inset-x-0 z-30 flex justify-center pointer-events-none">
-                <Compass
-                  playerPos={playerPosAndRot}
-                  markers={[
-                    ...fountains.map(f => ({ id: `f-${f.x}-${f.z}`, type: 'fountain' as const, x: f.x, z: f.z })),
-                    ...getStoryNPCs().map(n => ({ id: n.id, type: 'npc' as const, x: n.x, z: n.z })),
-                    ...(questState === 'active' ? [{ id: 'quest', type: 'quest' as const, x: 13.5, z: -14.0 }] : []),
-                    ...discoveredWaypoints.map(id => {
-                        const point = FAST_TRAVEL_POINTS.find(p => p.id === id);
-                        return point ? { id: point.id, type: 'waypoint' as const, x: point.x, z: point.z } : null;
-                    }).filter((m): m is NonNullable<typeof m> => !!m)
-                  ]}
-                />
-              </div>
-
-              <div className="hidden sm:flex items-center gap-1">
-                <BrandBadge variant="bronze" icon={isDay ? '☀️' : '🌙'}>
-                  {isDay ? 'DÍA' : 'NOCHE'}
-                </BrandBadge>
-              </div>
-            </div>
-
-            {/* ACTION BUTTONS: Quick Mobile Team/Bag + Menu Hub */}
-            <div className="flex flex-col items-end gap-1.5">
-              <BrandButton
-                variant="primary"
-                onClick={() => setShowMenuModal(true)}
-                className="min-h-[44px] min-w-[44px] px-2.5 sm:px-3 py-2 text-[9px] sm:text-[10px] tracking-wider"
-                title="Menú de Acciones y Opciones"
-              >
-                <span>⚙️</span>
-                <span className="ml-1 hidden xs:inline sm:inline">MENÚ</span>
-              </BrandButton>
+            {/* TOP-RIGHT: Action Buttons */}
+            <div className="flex items-center gap-1 pointer-events-auto">
+              {onOpenMapEditor && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    audioManager.playMenuBeep();
+                    onOpenMapEditor();
+                  }}
+                  className="min-h-[32px] min-w-[32px] px-1.5 py-1 bg-[#1b172a]/95 active:bg-[#2e2646] border border-[#f6d477]/50 rounded-xs text-[8px] text-[#f6d477] font-semibold flex items-center justify-center gap-1 shadow-md cursor-pointer touch-manipulation hover:border-[#f6d477]"
+                  title="Editor de Mapas [F2 o ~]"
+                >
+                  <span className="text-xs">🛠️</span>
+                </button>
+              )}
 
               {onOpenSoulBag && (
                 <button
@@ -504,15 +483,45 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                     audioManager.playMenuBeep();
                     onOpenSoulBag('team');
                   }}
-                  className="min-h-[40px] min-w-[44px] px-2 py-1.5 bg-[#191224]/95 active:bg-[#2A1F2D] border border-[#8A6A3B] rounded-xs text-[8px] text-[#F2E6C9] flex items-center justify-center gap-1 shadow-md cursor-pointer touch-manipulation"
+                  className="min-h-[32px] min-w-[32px] px-1.5 py-1 bg-[#191224]/95 active:bg-[#2A1F2D] border border-[#8A6A3B] rounded-xs text-[8px] text-[#F2E6C9] flex items-center justify-center gap-1 shadow-md cursor-pointer touch-manipulation"
                   aria-label="Abrir Escuadrón y Bolsa"
                 >
                   <span className="text-xs">🎒</span>
-                  <span className="hidden sm:inline">BOLSA</span>
+                  <span className="hidden md:inline">BOLSA</span>
                 </button>
               )}
+
+              <BrandButton
+                variant="primary"
+                onClick={() => setShowMenuModal(true)}
+                className="min-h-[32px] min-w-[32px] px-2 py-1 text-[8px] tracking-wider pointer-events-auto"
+                title="Menú de Acciones y Opciones"
+              >
+                <span>⚙️</span>
+                <span className="ml-0.5 hidden sm:inline">MENÚ</span>
+              </BrandButton>
             </div>
           </div>
+
+          {/* Row 2: Skyrim-Style Horizontal Compass */}
+          <div className="pointer-events-auto w-[88vw] max-w-xs sm:max-w-sm flex justify-center shadow-md">
+            <Compass
+              playerPos={playerPosAndRot}
+              onOpenWorldMap={onOpenWorldMap}
+              markers={[
+                ...fountains.map(f => ({ id: `f-${f.x}-${f.z}`, type: 'fountain' as const, x: f.x, z: f.z, name: 'Fuente Sagrada' })),
+                ...getStoryNPCs().map(n => ({ id: n.id, type: 'npc' as const, x: n.x, z: n.z, name: n.name })),
+                ...(questState === 'active' ? [{ id: 'quest', type: 'quest' as const, x: 13.5, z: -14.0, name: 'Misión Activa' }] : []),
+                ...discoveredWaypoints.map(id => {
+                    const point = FAST_TRAVEL_POINTS.find(p => p.id === id);
+                    return point ? { id: point.id, type: 'waypoint' as const, x: point.x, z: point.z, name: point.name } : null;
+                }).filter((m): m is NonNullable<typeof m> => !!m)
+              ]}
+            />
+          </div>
+
+
+
         </div>
       )}
 
@@ -588,6 +597,20 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                     >
                       <span className="text-sm">⚔️</span>
                       <span>Combate VS [B]</span>
+                    </BrandButton>
+                  )}
+                  {onOpenMapEditor && (
+                    <BrandButton
+                      variant="ki"
+                      onClick={() => {
+                        audioManager.playMenuBeep();
+                        setShowMenuModal(false);
+                        onOpenMapEditor();
+                      }}
+                      className="col-span-2 text-[8px] sm:text-[9px] gap-2 py-2.5 justify-start bg-[#1e1933] border-[#f6d477]/60 text-[#f6d477]"
+                    >
+                      <span className="text-sm">🛠️</span>
+                      <span className="font-bold">Editor de Mapas 3D [F2 / ~]</span>
                     </BrandButton>
                   )}
                 </div>
@@ -822,10 +845,10 @@ export const GameHUD: React.FC<GameHUDProps> = ({
 
       {/* MOBILE-FIRST TOUCH CONTROLS (360° ANALOG VIRTUAL JOYSTICK + CAMERA ORBIT & ACTION CLUSTER) */}
       {gameState === 'playing' && showTouchControls && !activeDialogue && !showMenuModal && !isAnyModalOpen && (
-        <div className="fixed bottom-0 inset-x-0 px-3 sm:px-5 pt-2 pb-safe pointer-events-none z-30 flex items-end justify-between select-none">
+        <div className="fixed bottom-0 inset-x-0 px-2.5 sm:px-5 pt-1.5 pb-safe pointer-events-none z-30 flex items-end justify-between select-none">
           
           {/* On-Screen 360° Analog Virtual Joystick */}
-          <div className="p-1.5 -m-1.5 pointer-events-auto touch-none">
+          <div className="p-1 -m-1 pointer-events-auto touch-none">
             <div
               ref={joystickBaseRef}
               role="slider"
@@ -865,7 +888,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
               onLostPointerCapture={() => {
                 releaseJoystick();
               }}
-              className={`relative w-34 h-34 sm:w-38 sm:h-38 flex items-center justify-center rounded-full bg-[#120d1d]/88 border-2 transition-colors touch-none cursor-grab active:cursor-grabbing ${
+              className={`relative w-28 h-28 sm:w-34 sm:h-34 flex items-center justify-center rounded-full bg-[#120d1d]/88 border-2 transition-colors touch-none cursor-grab active:cursor-grabbing ${
                 joystickState.isSprintZone
                   ? 'border-[#5FE3D2] shadow-[0_0_20px_rgba(95,227,210,0.45)]'
                   : joystickState.active

@@ -83,4 +83,12 @@ export class BiomeGenerator {
   ): ReadonlyMap<BiomeId, number> {
     return this.resolver.weightsAt(x, z, terrain);
   }
+
+  public setMasks(masks: readonly BiomeMask[]): void {
+    this.resolver.setMasks(masks);
+  }
+
+  public getMasks(): readonly BiomeMask[] {
+    return this.resolver.getMasks();
+  }
 }

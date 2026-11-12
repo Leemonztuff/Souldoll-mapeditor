@@ -77,36 +77,35 @@ Otros: `src/data/regions.ts`, `src/data/constants.ts`, `src/save/saveManager.ts`
 - `docs/world-engine/01-current-engine-audit.md` — auditoría del motor real (etapa 01, completada).
 - `docs/world-engine/02-world-engine-architecture.md` — arquitectura, contratos, dependencias, rendimiento y plan 03–08 (etapa 02, aprobada).
 - `docs/world-engine/03-terrain-stamps.md` — implementación de estampas, caché, integración y verificación (etapa 03, aprobada).
-- `docs/world-engine/04-biomes.md` — base de datos, prioridades, máscaras, splines abiertos, painter e integración (etapa 04, **pendiente de revisión**).
+- `docs/world-engine/04-biomes.md` — base de datos, prioridades, máscaras, splines abiertos, painter e integración (etapa 04, aprobada).
+- `docs/world-engine/05-terrain-sampler-validation.md` — validación de la caché de offsets en StampedTerrainSampler (aprobada).
+- `docs/world-engine/07-map-editor-ui.md` — interfaz visual del editor, paneles contextuales, gizmos 3D y regeneración (etapa 07, completada y validada).
+- `docs/world-engine/08-world-editor-workzone.md` — integración completa de herramientas, WorkZone, historial Undo/Redo y WorldDatabase (etapa 08, completada y validada).
 
-La estructura objetivo vive en `src/world/core|terrain|biomes|scatter|splines|editor`. `core/`, `terrain/` y `biomes/` ya existen; `scatter/`, `splines/` y `editor/` aún no.
+La estructura objetivo vive en `src/world/core|terrain|biomes|scatter|splines|editor`. Todos los directorios y módulos base ya han sido creados y están totalmente integrados.
 
 ## Estado de etapas
 
-| Etapa | Estado |
-|---|---|
-| 01 Auditoría | Completada |
-| 02 Arquitectura | Completada y aprobada |
-| 03 Terrain Stamps | Completada y aprobada |
-| 04 Biomas | Completada, pendiente de revisión |
-| 05 Scatter | No iniciada |
-| 06 Splines | No iniciada |
-| 07 Editor | No iniciada |
-| 08 Producción | No iniciada |
+| Etapa | Estado | Notas |
+|---|---|---|
+| 01 Auditoría | Completada | Auditoría del motor original. |
+| 02 Arquitectura | Completada | Diseño modular aprobado. |
+| 03 Terrain Stamps | **COMPLETADA Y VALIDADA** | 24/24 pruebas PASS. Caché ~1.1 MB. |
+| 04 Biomas | **COMPLETADA Y VALIDADA** | 24/24 pruebas PASS. Resolver y Painter integrados. |
+| 05 Scatter | **COMPLETADA Y VALIDADA** | Auditada. Integrado en `ChunkManager` y `worldGen.ts`. |
+| 06 Splines | **COMPLETADA Y VALIDADA** | Auditada. Caminos y ríos funcionales y deterministas. |
+| 07 Editor | **COMPLETADA Y VALIDADA** | UI visual integrada, retícula 3D, gizmos, 5 paneles, comandos y regeneración. |
+| 08 Producción | **COMPLETADA Y VALIDADA** | Integración total con WorldDatabase, WorkZones y Undo/Redo. |
 
 ## Decisiones pendientes
 
-- Revisar/aprobar la etapa 04 antes de iniciar la 05.
+- Optimización de `TerrainStampBlender.ts` (caché exclusiva de offsets) VALIDADA (ver `05-terrain-sampler-validation.md`).
+- UI del Editor (Etapa 07 & P8) COMPLETADA Y VALIDADA (ver `07-map-editor-ui.md`, `08-world-editor-workzone.md`).
 - Confirmar posiciones finales de las estampas demo del este.
-- Confirmar `src/world/` como ubicación del motor.
-- Confirmar mundo continuo con `WorldDefinition` por zona/mapa.
-- Resolución actual de la caché de offsets: 2 m por celda, baldosa 64 m. Evaluar 1 m.
-- Restaurar `17.webp` y añadir Vitest antes de la etapa 08.
-- Crear commit base antes de la etapa 03 (el repo padre no tiene commits).
-- La skill de arte no existe en este proyecto; no se toca la de Argentum Tales. Se propone crear una skill local equivalente con aprobación.
+- Restaurar `17.webp` antes de lanzamiento final.
 
 ## Instrucciones para el siguiente agente
 
-- Leer `docs/world-engine/01-current-engine-audit.md`, `02-world-engine-architecture.md`, `03-terrain-stamps.md` y `04-biomes.md` antes de tocar código.
-- No iniciar la etapa 05 sin autorización explícita del usuario.
+- Leer `docs/world-engine/01-current-engine-audit.md`, `02-world-engine-architecture.md`, `03-terrain-stamps.md`, `04-biomes.md` y `04-integration-audit.md` antes de tocar código.
+- No declarar etapas como finalizadas sin pasar la suite de pruebas `src/core/tests.ts`.
 - Al implementar, preservar el juego jugable en cada paso y reportar archivos creados/modificados, funcionalidad, lint/build/tests y pendientes.

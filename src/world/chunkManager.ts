@@ -16,6 +16,7 @@ import {
   OCEAN_WATER_LEVEL,
 } from './proceduralTerrain';
 import type { TerrainSampler } from './terrain/TerrainData';
+import type { Bounds2 } from './core/WorldTypes';
 import type { ScatterGenerator } from './scatter/ScatterGenerator';
 import { ExclusionMask } from './scatter/ExclusionMask';
 import { SCATTER_GROUP_IDS } from './scatter/scatter.data';
@@ -595,6 +596,38 @@ export class ChunkManager {
 
   public getLoadedChunkCount(): number {
     return this.activeChunks.size;
+  }
+
+  public getTerrainMeshes(): THREE.Mesh[] {
+    const meshes: THREE.Mesh[] = [];
+    for (const chunk of this.activeChunks.values()) {
+      meshes.push(chunk.terrainMesh);
+    }
+    return meshes;
+  }
+
+  public invalidateRegion(region?: Bounds2): void {
+    const toRebuild: { cx: number; cz: number }[] = [];
+    const size = this.profile.chunkSize;
+    for (const [key, chunk] of this.activeChunks.entries()) {
+      if (region) {
+        const chunkMinX = chunk.cx * size;
+        const chunkMaxX = chunkMinX + size;
+        const chunkMinZ = chunk.cz * size;
+        const chunkMaxZ = chunkMinZ + size;
+        const overlaps =
+          chunkMaxX >= region.minX &&
+          chunkMinX <= region.maxX &&
+          chunkMaxZ >= region.minZ &&
+          chunkMinZ <= region.maxZ;
+        if (!overlaps) continue;
+      }
+      toRebuild.push({ cx: chunk.cx, cz: chunk.cz });
+      this.unloadChunk(key, chunk);
+    }
+    for (let i = 0; i < toRebuild.length; i++) {
+      this.buildChunk(toRebuild[i].cx, toRebuild[i].cz);
+    }
   }
 
   public dispose(): void {

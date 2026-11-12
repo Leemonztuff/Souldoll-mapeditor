@@ -7,3 +7,4 @@ export * from './WorldSpline';
 export * from './RoadGenerator';
 export * from './RiverGenerator';
 export * from './LakeGenerator';
+export * from './SplineSpatialHash';
